@@ -18,10 +18,9 @@ This document summarizes the results of all security test cases run against the 
 | Metric | Count |
 |--------|-------|
 | Total test cases planned | 10 |
-| Test cases completed | 9 |
-| Test cases pending (TC10) | 1 |
+| Test cases completed | 10 |
 | PASSED clean (no vulnerability) | 5 |
-| PASSED with findings (vulnerability detected) | 4 |
+| PASSED with findings (vulnerability detected) | 5 |
 | FAILED | 0 |
 
 ---
@@ -39,7 +38,7 @@ This document summarizes the results of all security test cases run against the 
 | TC7 | DoS_Stress_Login             | Denial of Service        | High     | PASSED with finding | Medium           |
 | TC8 | Security_Headers_Check       | HTTP Security Headers    | High     | PASSED with finding | Critical         |
 | TC9 | CSRF_Login_No_Token          | CSRF                     | High     | PASSED with finding | Critical         |
-| TC10| Information_Disclosure_404   | Information Disclosure   | High     | Pending          | TBD                 |
+| TC10| Information_Disclosure_404   | Information Disclosure   | High     | PASSED with finding | Critical         |
 
 ---
 
@@ -153,10 +152,21 @@ This document summarizes the results of all security test cases run against the 
 
 | Field | Value |
 |-------|-------|
-| Status | Pending (to be added) |
-| Target | GET /Login/NonexistentEndpoint |
-| Result | TBD |
-| Finding | TBD |
+| Status | PASSED with finding |
+| Target | 17 endpoints (control + 8 nonexistent + 2 path traversal + 2 attack targets + 4 sensitive files) |
+| Severity | Critical |
+| Method | Raw HTTP GET via Python requests |
+| Result | 16/17 endpoint (94%) de lo thong tin nhay cam. 80 findings tong cong (16 Critical, 32 High, 16 Medium, 16 Low). |
+| Finding 1 | **Absolute path disclosure**: /var/www/oneoffice/Core/v2.1/... tren TAT CA cac error page |
+| Finding 2 | **Stack trace disclosure**: day du file path, function call, line number (Fatal error + Uncaught exception) |
+| Finding 3 | **Framework name disclosure**: oneoffice (custom framework), App_Exception class, Core/v2.1 |
+| Finding 4 | **App structure disclosure**: modules/Login/controllers/, apps/modules/Api/controllers/ |
+| Finding 5 | **Path traversal reflection**: /Login/../../../etc/passwd tra "Folder for Etc is not found" (server xu ly path) |
+| Finding 6 | **PHP version disclosure**: X-Powered-By: PHP/5.6.40 (EOL since 2019, nguy co cao) |
+| Finding 7 | **Web server version disclosure**: Server: nginx/1.20.1 (lo version) |
+| Risk | Attacker biet framework, version, app structure, file path -> co the: (1) tim CVE tuong ung cho PHP 5.6.40 (rat nhieu), (2) thuc hien path traversal bi muc tieu hon, (3) do tim file nhay cam, (4) tao malware chuyen biet cho framework "oneoffice" |
+| OWASP | A05:2021 - Security Misconfiguration |
+| Total findings | 80 (16 Critical, 32 High, 16 Medium, 16 Low) |
 
 ---
 
@@ -168,6 +178,7 @@ This document summarizes the results of all security test cases run against the 
 | TC7 | Server returns 504 under stress (4% fail)  | Medium   | A04:2021 - DoS      |
 | TC8 | Missing all 4 required security headers    | Critical | A05:2021 - Security Misconfiguration |
 | TC9 | Login form has no CSRF token               | Critical | A01:2021 - Broken Access Control |
+| TC10| Verbose error pages disclose paths, stack trace, framework, PHP version | Critical | A05:2021 - Security Misconfiguration |
 
 ---
 
@@ -199,6 +210,16 @@ This document summarizes the results of all security test cases run against the 
 - Add SameSite=Strict or SameSite=Lax to session cookie
 - Consider using SameSite=Strict on sso_utc_token_office cookie
 
+### For TC10 - Information Disclosure (CRITICAL)
+- Set `display_errors = Off` in php.ini for production
+- Set `expose_php = Off` to remove X-Powered-By header
+- Configure custom 404/500 error pages that do NOT show stack trace
+- Remove `Server` header version: use `server_tokens off` in nginx
+- Implement generic error handler that returns only "Page not found" / "Server Error"
+- Fix path traversal: do not reflect user-controlled path in error messages
+- Upgrade PHP from 5.6.40 to PHP 8.x (5.6 is EOL since 2019 with many known CVEs)
+- Add try/catch around controller instantiation to handle missing controllers gracefully
+
 ---
 
 ## Update History
@@ -207,3 +228,4 @@ This document summarizes the results of all security test cases run against the 
 |------------|--------------|--------------------------------------|
 | 2026-10-08 | baitap - buoi6 | Initial report with 8 test cases (TC01 to TC08). TC09 and TC10 pending. |
 | 2026-10-08 | baitap - buoi6 | Added TC09 - CSRF Login No Token. Test detected 5 critical CSRF findings: no token, no Origin validation, no Referer validation, no SameSite cookie. TC10 still pending. |
+| 2026-10-08 | baitap - buoi6 | Added TC10 - Information Disclosure 404. Test detected 80 findings (16 Critical, 32 High) on 16/17 endpoints: absolute paths, stack traces, framework name, PHP version, nginx version. ALL 10 test cases completed. |
