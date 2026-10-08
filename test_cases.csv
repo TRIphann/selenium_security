@@ -1,0 +1,16 @@
+ID,Test Case,Username,Password,Expected,Priority,Type
+TC1,SQLi_Login_Username,Admin' OR '1'='1,admin123,He thong KHONG cho dang nhap - khong bypass auth bang SQLi - thong bao "Invalid credentials",High,Security
+TC2,SQLi_Login_Password,Admin,' OR '1'='1,He thong KHONG cho dang nhap - khong bypass password bang SQLi - khong lo thong tin DB,High,Security
+TC3,SQLi_Search_Employee_Directory,Admin' UNION SELECT NULL,user123,Search employee "X' UNION..." KHONG tra ve ket qua - khong hien thi loi SQL syntax,High,Security
+TC4,SQLi_Add_Employee_PIM,SQLi' OR 1=1-- ,Test123!,Add Employee voi first name "SQLi' OR 1=1--" KHONG chen duoc vao DB - form bi reject hoac input bi escape,High,Security
+TC5,XSS_Reflected_Search_Directory,<script>alert('XSS')</script>,user123,Search box phaii escape ky tu < > - khong render script - khong hien thi alert,High,Security
+TC6,XSS_Stored_Employee_FirstName,<img src=x onerror=alert(1)>,Test123!,Them employee voi first name chua <img onerror> - KHONG duoc luu hoac bi escape khi hien thi trong danh sach,High,Security
+TC7,XSS_Stored_Buzz_Post,<svg/onload=alert(document.cookie)>,Test123!,Post noi dung chua <svg onload> len Buzz KHONG thuc thi script - noi dung bi escape hoac block,High,Security
+TC8,Command_Injection_Leave_Reason,& calc.exe,Test123!,Nhap ly do nghi phep "test & calc.exe" KHONG thuc thi lenh he thong - chi luu chuoi text,High,Security
+TC9,Brute_Force_Login_5times,Admin,wrong_pass_1,He thong KHONG bi brute force - sau 5 lan sai phai khoa tam thoi hoac yeu cau CAPTCHA - khong break duoc account,High,Security
+TC10,DoS_1000_Requests_Dashboard,Admin,admin123,Goi 1000 request lien tuc toi dashboard - server KHONG crash - response time ≤5s - HTTP 200,High,Security
+TC11,CSRF_Logout_GET,Admin,admin123,Truy cap URL GET "/logout" hoac "/auth/logout" tu site khac KHONG dang xuat user - can CSRF token hop le,High,Security
+TC12,IDOR_Employee_Detail,Admin,admin123,Truy cap URL "/pim/viewEmployee/empNumber/9999" voi id khong thuoc user - KHONG xem duoc thong tin nhan vien khac - 403 Forbidden,High,Security
+TC13,Path_Traversal_Buzz_Upload,Admin,admin123,Upload file attachment ten "../../../etc/passwd" KHONG upload duoc - server validate va reject - 400 Bad Request,High,Security
+TC14,LDAP_Injection_Login,*)(uid=*))(|(uid=*,admin123,Login voi LDAP injection KHONG bypass duoc auth - thong bao "Invalid credentials" - khong enum user,High,Security
+TC15,Header_Injection_CRLF,Admin,admin123,Submit form co header chua ky tu \r\n (CRLF) KHONG bi inject header - response khong bi split - 400 hoac escaped,High,Security
