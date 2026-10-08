@@ -3,47 +3,45 @@ TC01 - SQL Injection Login Username
 =====================================
 Test ID:         TC01_SQLi_Login_Username
 Test Name:       SQLi_Login_Username
-Target Module:   Login Page (https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)
+Target Module:   Login Page (https://vanphongdientu.utc.edu.vn/Login)
 Type:            Security - SQL Injection
 Priority:        High
 Author:          baitap - buoi6
 Created:         2026-10-08
 
 Muc tieu (Objective):
-    Kiem thu xem trang Login cua OrangeHRM co bi tan cong SQL Injection
-    o truong Username hay khong. Hacker co the dung payload
-    "Admin' OR '1'='1" de bypass authentication va truy cap
-    trai phep vao tai khoan Admin.
+    Kiem thu xem trang Login cua UTC Van Phong Dien Tu co bi tan cong
+    SQL Injection o truong Username hay khong. Hacker co the dung payload
+    "admin' OR '1'='1" de bypass authentication va truy cap trai phep.
 
 Pre-condition:
     - Webdriver da san sang (Chrome/Firefox/Edge)
-    - URL OrangeHRM demo con hoat dong
+    - URL https://vanphongdientu.utc.edu.vn/Login con hoat dong
     - Khong co session dang nhap truoc do
-    - Da biet username hop le: "Admin", password: "admin123"
 
 Test Data:
-    - Username (payload SQLi):  Admin' OR '1'='1
-    - Password (gia tri binh thuong):  admin123
-    - Expected URL sau khi submit:  van o trang /auth/login
-    - Expected message:            "Invalid credentials"
+    - Username (payload SQLi):  admin' OR '1'='1
+    - Password (gia tri binh thuong):  anything
+    - Expected URL sau khi submit:  van o trang /Login
+    - Expected message:            "Tài khoản hoặc mật khẩu không đúng."
 
 Steps:
-    Step 1: Dieu huong den trang Login cua OrangeHRM
+    Step 1: Dieu huong den trang Login cua UTC
     Step 2: Cho trang load xong (wait for username input)
     Step 3: Nhap payload SQL Injection vao o Username
-    Step 4: Nhap password "admin123" vao o Password
-    Step 5: Click nut Login
-    Step 6: Doi response tu server (1.5s)
-    Step 7: Kiem tra URL hien tai - phai VAN o trang login
-    Step 8: Kiem tra thong bao loi "Invalid credentials" xuat hien
-    Step 9: Kiem tra khong co nut Logout tren trang (chua dang nhap thanh cong)
+    Step 4: Nhap password bat ky vao o Password
+    Step 5: Click nut Login (submit)
+    Step 6: Doi response tu server (2s)
+    Step 7: Kiem tra URL hien tai - phai VAN o trang /Login
+    Step 8: Kiem tra thong bao loi xuat hien
+    Step 9: Kiem tra khong co nut Logout (chua dang nhap thanh cong)
     Step 10: Kiem tra khong co loi SQL syntax bi loi ra ngoai (information disclosure)
 
 Expected:
     - Trang KHONG dang nhap thanh cong
-    - URL giu nguyen o trang /auth/login
-    - Hien thi thong bao "Invalid credentials"
-    - Khong co loi SQL syntax bi phoi bay (an toan thong tin DB)
+    - URL giu nguyen o trang /Login
+    - Hien thi thong bao loi (Tài khoản hoặc mật khẩu không đúng.)
+    - Khong co loi SQL syntax bi phoi bay
     - Hacker KHONG the bypass authentication bang SQLi
 
 Cleanup:
@@ -56,26 +54,21 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from Locators.orangehrm_locators import (
-    OrangeHRMLoginLocators,
-    OrangeHRMCommonLocators,
+from Locators.utclogin_locators import (
+    UTCLoginLocators,
+    UTCDashboardLocators,
     SecurityEndpoints,
 )
 
 
 class TestTC01SQLiLoginUsername:
-    """Test class cho TC01 - SQL Injection o truong Username cua trang Login"""
+    """Test class cho TC01 - SQL Injection o truong Username cua trang Login UTC"""
 
     # ==================== FIXTURE ====================
     @pytest.fixture(autouse=True)
     def setup(self, driver, base_url):
         """
         Setup tu dong chay truoc moi test method.
-        Khoi tao:
-            - self.driver:    Selenium WebDriver
-            - self.base_url:  URL co so cua OrangeHRM
-            - self.wait:      WebDriverWait (timeout 10s)
-            - self.login_url: URL cua trang Login
         """
         self.driver = driver
         self.base_url = base_url
@@ -91,25 +84,31 @@ class TestTC01SQLiLoginUsername:
         TC01 - SQL Injection Login Username
 
         Mo ta chi tiet:
-            Kiem tra xem OrangeHRM co cho phep dang nhap bang payload
-            SQL Injection "Admin' OR '1'='1" hay khong.
+            Kiem tra xem UTC Van Phong Dien Tu co cho phep dang nhap bang
+            payload SQL Injection "admin' OR '1'='1" hay khong.
 
             Logic tan cong:
                 - Cau SQL goc:   SELECT * FROM users WHERE username='<input>' AND password='<pwd>'
-                - Sau khi nhap:  SELECT * FROM users WHERE username='Admin' OR '1'='1' AND password='admin123'
+                - Sau khi nhap:  SELECT * FROM users WHERE username='admin' OR '1'='1' AND password='anything'
                 - Dieu kien OR '1'='1' luon dung -> bypass password check
                 - Neu he thong KHONG su dung parameterized query, hacker se vao duoc
 
             He thong AN TOAN se:
-                - Su dung parameterized query / ORM (Hibernate, JPA, ...)
-                - Escape ky tu dac biet (')
-                - Hien thi "Invalid credentials" ma khong can biet user co ton tai khong
+                - Su dung parameterized query / ORM
+                - Hien thi "Tài khoản hoặc mật khẩu không đúng." ma khong can biet
+                  user co ton tai khong
         """
         # ----------------- TEST DATA -----------------
-        sql_payload = "Admin' OR '1'='1"
-        password = "admin123"
-        expected_url_contains = "/auth/login"
-        expected_error_substring = "Invalid"
+        sql_payload = "admin' OR '1'='1"
+        password = "anything"
+        expected_url_contains = "/Login"
+        # Trang UTC co the tra cac thong bao sau:
+        expected_error_substrings = [
+            "Tài khoản hoặc mật khẩu không đúng",
+            "Invalid",
+            "Sai",
+            "không đúng",
+        ]
 
         # ==================== STEP 1: Dieu huong den trang Login ====================
         print(f"\n[STEP 1] Navigate to Login page: {self.login_url}")
@@ -119,7 +118,7 @@ class TestTC01SQLiLoginUsername:
         print("[STEP 2] Wait for username input visible (page loaded)")
         username_input = self.wait.until(
             EC.visibility_of_element_located(
-                (By.XPATH, OrangeHRMLoginLocators.USERNAME_INPUT)
+                (By.XPATH, UTCLoginLocators.USERNAME_INPUT)
             )
         )
         assert username_input.is_displayed(), \
@@ -135,24 +134,24 @@ class TestTC01SQLiLoginUsername:
         assert actual_value == sql_payload, \
             f"Username input phai chua payload. Actual: {actual_value!r}"
 
-        # ==================== STEP 4: Nhap password hop le vao Password ====================
-        print("[STEP 4] Nhap password 'admin123' vao Password field")
+        # ==================== STEP 4: Nhap password bat ky vao Password ====================
+        print("[STEP 4] Nhap password vao Password field")
         password_input = self.driver.find_element(
-            By.XPATH, OrangeHRMLoginLocators.PASSWORD_INPUT
+            By.XPATH, UTCLoginLocators.PASSWORD_INPUT
         )
         password_input.clear()
         password_input.send_keys(password)
 
         # ==================== STEP 5: Click nut Login ====================
-        print("[STEP 5] Click button Login")
+        print("[STEP 5] Click button Login (submit)")
         login_button = self.driver.find_element(
-            By.XPATH, OrangeHRMLoginLocators.LOGIN_BUTTON
+            By.XPATH, UTCLoginLocators.SUBMIT_BUTTON
         )
         login_button.click()
 
         # ==================== STEP 6: Doi response tu server ====================
-        print("[STEP 6] Cho server xu ly (1.5s)")
-        time.sleep(1.5)
+        print("[STEP 6] Cho server xu ly (2s)")
+        time.sleep(2)
 
         # ==================== STEP 7: Kiem tra URL van o trang login ====================
         current_url = self.driver.current_url
@@ -161,30 +160,44 @@ class TestTC01SQLiLoginUsername:
             f"URL phai van o trang login (chua dang nhap thanh cong). " \
             f"Expected contains: {expected_url_contains!r}, Actual: {current_url!r}"
 
-        # ==================== STEP 8: Kiem tra thong bao "Invalid credentials" ====================
-        print("[STEP 8] Kiem tra thong bao 'Invalid credentials' xuat hien")
+        # ==================== STEP 8: Kiem tra thong bao loi ====================
+        print("[STEP 8] Kiem tra thong bao loi xuat hien")
+        error_text = ""
         try:
             error_element = self.driver.find_element(
-                By.XPATH, OrangeHRMLoginLocators.LOGIN_ERROR_INVALID
+                By.XPATH, UTCLoginLocators.ERROR_DIV
             )
             error_text = error_element.text
             print(f"   Error message hien thi: {error_text!r}")
-            assert expected_error_substring in error_text, \
-                f"Error message phai chua '{expected_error_substring}'. " \
-                f"Actual: {error_text!r}"
-        except Exception as e:
-            pytest.fail(
-                f"Khong tim thay thong bao loi 'Invalid credentials'. "
-                f"Co the he thong da bi bypass hoac error locator sai. Error: {e}"
-            )
+        except Exception:
+            # Fallback: thu ERROR_ANY
+            try:
+                error_element = self.driver.find_element(
+                    By.XPATH, UTCLoginLocators.ERROR_ANY
+                )
+                error_text = error_element.text
+                print(f"   Error message (fallback) hien thi: {error_text!r}")
+            except Exception as e:
+                pytest.fail(
+                    f"Khong tim thay thong bao loi tren trang. "
+                    f"Co the he thong da bi bypass hoac error locator sai. Error: {e}"
+                )
+
+        # Kiem tra thong bao loi co noi dung mong doi (case-insensitive)
+        error_text_lower = error_text.lower()
+        matched = any(
+            sub.lower() in error_text_lower
+            for sub in expected_error_substrings
+        )
+        assert matched, \
+            f"Error message phai chua mot trong cac substring: {expected_error_substrings}. " \
+            f"Actual: {error_text!r}"
 
         # ==================== STEP 9: Kiem tra khong co nut Logout ====================
         print("[STEP 9] Kiem tra khong co nut Logout (chua dang nhap thanh cong)")
         logout_elements = self.driver.find_elements(
-            By.XPATH, OrangeHRMDashboardLocators.LOGOUT_LINK
-            if False else "//a[text()='Logout']"
+            By.XPATH, UTCDashboardLocators.LOGOUT_LINK
         )
-        # Note: vi chua dang nhap, khong co dropdown user, nen khong co nut Logout
         assert len(logout_elements) == 0, \
             "KHONG duoc co nut Logout vi user chua dang nhap thanh cong. " \
             f"Tim thay {len(logout_elements)} nut Logout - co the da bi SQLi bypass!"
@@ -196,6 +209,7 @@ class TestTC01SQLiLoginUsername:
             "SQL syntax", "mysql_fetch", "mysql_num_rows",
             "ORA-", "PostgreSQL", "SQLSTATE", "syntax error",
             "unterminated quoted string", "quoted string not properly terminated",
+            "You have an error in your SQL syntax",
         ]
         leaked_errors = [kw for kw in sql_error_keywords if kw.lower() in page_source.lower()]
         assert len(leaked_errors) == 0, \
@@ -204,12 +218,8 @@ class TestTC01SQLiLoginUsername:
 
         # ==================== FINAL: Test PASS ====================
         print("\n[RESULT] TC01 PASSED - He thong CHONG duoc SQLi o Username")
-        print("         - URL van o trang login")
-        print("         - Hien thi 'Invalid credentials'")
+        print("         - URL van o trang /Login")
+        print("         - Hien thi thong bao loi dang mong doi")
         print("         - Khong co SQL syntax error")
         print("         - Khong co nut Logout (chua bi bypass)")
         assert True
-
-
-# Import rieng de tranh circular import trong final check
-from Locators.orangehrm_locators import OrangeHRMDashboardLocators

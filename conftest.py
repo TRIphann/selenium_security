@@ -1,6 +1,6 @@
 """
-conftest.py - Pytest Configuration for OrangeHRM Security Tests
-Cấu hình chung cho 15 security test cases
+conftest.py - Pytest Configuration for UTC Van Phong Dien Tu Security Tests
+Cấu hình chung cho các security test cases trên https://vanphongdientu.utc.edu.vn
 """
 
 import pytest
@@ -29,7 +29,8 @@ def pytest_configure(config):
     log_dir.mkdir(exist_ok=True)
 
     print("\n" + "=" * 70)
-    print("ORANGEHRM SECURITY TESTING - 15 TEST CASES")
+    print("UTC VAN PHONG DIEN TU - SECURITY TESTING")
+    print("Target: https://vanphongdientu.utc.edu.vn/Login")
     print("=" * 70)
     print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Browser: {config.getoption('--browser', default='chrome')}")
@@ -53,8 +54,8 @@ def pytest_addoption(parser):
     parser.addoption(
         "--base-url",
         action="store",
-        default="https://opensource-demo.orangehrmlive.com",
-        help="OrangeHRM base URL",
+        default="https://vanphongdientu.utc.edu.vn",
+        help="UTC Van Phong Dien Tu base URL",
     )
     parser.addoption(
         "--implicit-wait",
@@ -152,14 +153,12 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "sqli: SQL Injection tests")
     config.addinivalue_line("markers", "xss: Cross-Site Scripting tests")
     config.addinivalue_line("markers", "login: Login related tests")
-    config.addinivalue_line("markers", "pim: PIM module tests")
-    config.addinivalue_line("markers", "directory: Directory module tests")
-    config.addinivalue_line("markers", "leave: Leave module tests")
-    config.addinivalue_line("markers", "buzz: Buzz module tests")
-    config.addinivalue_line("markers", "dashboard: Dashboard tests")
+    config.addinivalue_line("markers", "auth: Authentication tests")
     config.addinivalue_line("markers", "session: Session management tests")
+    config.addinivalue_line("markers", "input_validation: Input validation tests")
     config.addinivalue_line("markers", "high: High severity")
     config.addinivalue_line("markers", "medium: Medium severity")
+    config.addinivalue_line("markers", "low: Low severity")
 
 
 # ==================== Session info ====================
